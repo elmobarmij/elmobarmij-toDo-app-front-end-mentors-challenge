@@ -1,0 +1,15 @@
+$font-family-sans-serif: "Open Sans", sans-serif;
+@import "../../node_modules/bootstrap/scss/bootstrap.scss";
+
+.ps-6 {
+  padding-left: 8rem !important;
+}
+
+.py-8 {
+  padding-top: 2.2rem !important;
+  padding-bottom: 2.2rem !important;
+}
+
+--bs-body-bg {
+  background-color: var(--VeryDarkBlue);
+}

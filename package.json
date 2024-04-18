@@ -1,0 +1,22 @@
+{
+  "name": "initial",
+  "version": "1.0.0",
+  "description": "Project Initial",
+  "main": "index.js",
+  "scripts": {
+    "watch:sass": "node-sass project/sass/main.scss project/css/style.css -w",
+    "prefix:css": "postcss --use autoprefixer -b 'last 10 versions' project/css/style.css -o project/css/prefix.css",
+    "devserver": "live-server",
+    "start": "npm-run-all --parallel watch:sass prefix:css devserver"
+  },
+  "author": "Chaker Ramdani",
+  "license": "MIT",
+  "devDependencies": {
+    "autoprefixer": "^10.4.15",
+    "bootstrap": "^5.3.1",
+    "concat": "^1.0.3",
+    "node-sass": "^9.0.0",
+    "npm-run-all": "^4.1.5",
+    "postcss-cli": "^10.1.0"
+  }
+}
