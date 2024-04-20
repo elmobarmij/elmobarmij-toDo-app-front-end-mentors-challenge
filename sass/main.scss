@@ -165,6 +165,15 @@ body.active {
   color: var(--varkGrayishBlue);
 }
 
+.container-first {
+  height: 50rem;
+}
+
+.todos-container {
+  max-height: 20rem;
+  overflow-y: scroll;
+}
+
 @media (max-width: 767px) {
   .w-90 {
     width: 90% !important;

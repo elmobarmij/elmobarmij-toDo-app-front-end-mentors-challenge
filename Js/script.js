@@ -1,12 +1,19 @@
 const inputTodo = document.querySelector(".create-todo");
 const todoCheckIcon = document.querySelector(".todo-check");
 const todosContainer = document.querySelector(".todos-container");
+const itemsCounter = document.querySelectorAll(".items-counter");
+
 let clearCompleted = false;
+let globalTodoItems = [];
+let numberOfTodos = 0;
+
 // Button list
 const btnAll = document.querySelector(".btn__all");
 const btnActive = document.querySelector(".btn__active");
 const btnCompleted = document.querySelector(".btn__completed");
 const btnClear = document.querySelector(".btn__clear");
+const clearBtns = document.querySelectorAll(".btn__clear");
+
 // Toggle Dark Mode
 document.getElementById("btnSwitch").addEventListener("click", () => {
   if (document.documentElement.getAttribute("data-bs-theme") == "dark") {
@@ -20,20 +27,26 @@ document.getElementById("btnSwitch").addEventListener("click", () => {
   }
 });
 
-// Create Todo List
-const createTodo = function () {
-  document.addEventListener("keydown", function (e) {
-    if (e.key !== "Enter") return;
-    if (inputTodo.value !== "") {
-      createMarkup(inputTodo.value);
-      // back to All todo list
-      btnAll.click();
-    }
+// Helpers
+const renderNumOfTodos = function () {
+  numberOfTodos = globalTodoItems.filter((item) =>
+    item.classList.contains("todo-item")
+  ).length;
+  itemsCounter.forEach((item) => {
+    item.textContent = numberOfTodos;
   });
+};
 
-  const createMarkup = function (inp) {
-    const html = `
-   <div
+const countItems = function () {
+  const items = document.querySelectorAll(".todo-item");
+  numberOfTodos = items.length;
+  itemsCounter.forEach((item) => (item.textContent = numberOfTodos));
+};
+
+// Create Todo List
+const createTodo = function (inp) {
+  const html = `
+    <div
       class="todo-item position-relative d-flex justify-content-center 
       align-items-center"
     >
@@ -69,126 +82,104 @@ const createTodo = function () {
       </div>
       `;
 
-    inputTodo.value = "";
-    todosContainer.insertAdjacentHTML("beforeend", html);
+  inputTodo.value = "";
+  todosContainer.insertAdjacentHTML("beforeend", html);
 
-    let numberOfTodos;
-    const itemsCounter = document.querySelectorAll(".items-counter");
-    const todoItems = Array.from(document.querySelectorAll(".todo-item"));
-    const closeIcons = document.querySelectorAll(".todo-close");
-    const checkIcons = document.querySelectorAll(".todo-check");
-    const arrayOfTodos = Array.from(checkIcons);
-    const counterElements = document.querySelectorAll(".items-counter");
+  const todoItems = Array.from(document.querySelectorAll(".todo-item"));
+  const closeIcons = document.querySelectorAll(".todo-close");
+  const checkIcons = document.querySelectorAll(".todo-check");
+  const arrayOfTodos = Array.from(checkIcons);
+  const counterElements = document.querySelectorAll(".items-counter");
 
-    const countItems = function () {
-      const items = document.querySelectorAll(".todo-item");
-      numberOfTodos = items.length;
-      itemsCounter.forEach((item) => (item.textContent = numberOfTodos));
-    };
+  counterElements.forEach((el) => countItems(el));
 
-    counterElements.forEach((el) => countItems(el));
+  // loop through all todos
+  //1 if todo doesn't have active add it
+  //2 if todo have active remove it
 
-    arrayOfTodos.map((todo) => {
-      todo.addEventListener("click", function () {
-        todo.classList.add("active");
-        todo.parentElement.parentElement.classList.add("active-todo");
-        todo.addEventListener("click", function () {
-          todo.classList.remove("active");
-          todo.parentElement.parentElement.classList.remove("active-todo");
-        });
-      });
-    });
-
-    const closeTodo = function () {
-      closeIcons.forEach((icon) => {
-        if (icon === null) return;
-
-        icon.addEventListener("click", function () {
-          icon.closest(".todo-item").remove();
-          numberOfTodos--;
-
-          todosContainer.children.length === 0
-            ? itemsCounter.forEach((item) => (item.textContent = 0))
-            : countItems();
-        });
-      });
-    };
-    closeTodo();
-
-    const renderNumOfTodos = function () {
-      numberOfTodos = todoItems.filter((item) =>
-        item.classList.contains("active-todo")
-      ).length;
-      itemsCounter.forEach((item) => {
-        item.textContent = numberOfTodos;
-      });
-    };
-
-    // Handle click on buttons
-
-    btnAll.addEventListener("click", function () {
-      const items = document.querySelectorAll(".todo-item");
-      items.forEach((it) => it.classList.remove("hidden"));
-      countItems();
-    });
-
-    btnActive.addEventListener("click", function () {
-      const activeTodos = todoItems.filter((item) =>
-        item.classList.contains("active-todo")
-      );
-
-      todoItems.forEach((it) => it.classList.remove("hidden"));
-      activeTodos.forEach((el) => {
-        el.classList.add("hidden");
-      });
-
-      numberOfTodos = todoItems.filter(
-        (item) => !item.classList.contains("active-todo")
-      ).length;
-      itemsCounter.forEach((item) => {
-        item.textContent = numberOfTodos;
-      });
-    });
-
-    const clearBtns = document.querySelectorAll(".btn__clear");
-
-    clearBtns.forEach((btn) => {
-      btn.addEventListener("click", function () {
-        clearCompleted = true;
-        const activeTodos = todoItems.filter((item) =>
-          item.classList.contains("active-todo")
-        );
-        activeTodos.map((todo) => todo.remove());
-        renderNumOfTodos();
-        // Back to all todos
-        btnAll.click();
-      });
-    });
-
-    btnCompleted.addEventListener("click", function () {
-      const notActiveTodos = todoItems.filter(
-        (item) => !item.classList.contains("active-todo")
-      );
-
-      const activeTodos = todoItems.filter((item) =>
-        item.classList.contains("active-todo")
-      );
-      activeTodos.forEach((el) => el.classList.remove("hidden"));
-      notActiveTodos.forEach((el) => el.classList.add("hidden"));
-
-      // This last lines of code is to fix a bug; when we click on completed button after clicking on clear completed button, we get a wrong items count number, so we use this condtion to get it fixed
-
-      if (clearCompleted) {
-        itemsCounter.forEach((item) => {
-          item.textContent = numberOfTodos;
-        });
+  checkIcons.forEach((todo) => {
+    todo.addEventListener("click", function (e) {
+      arrayOfTodos.forEach((todo) => todo.classList.remove("active"));
+      if (!e.target.classList.contains("active")) {
+        e.target.classList.add("active");
       } else {
-        renderNumOfTodos();
+        e.target.classList.remove("active");
       }
     });
+  });
+
+  const closeTodo = function () {
+    closeIcons.forEach((icon) => {
+      if (icon === null) return;
+
+      icon.addEventListener("click", function () {
+        icon.closest(".todo-item").remove();
+        numberOfTodos--;
+        todosContainer.children.length === 0
+          ? itemsCounter.forEach((item) => (item.textContent = 0))
+          : countItems();
+      });
+    });
   };
+  closeTodo();
+
+  // Set todoItems to globalTodoItems,
+  // so we can access todos array from global scope (outside createTodo())
+  globalTodoItems = todoItems;
 };
-createTodo();
+
+// Event listeners
+btnAll.addEventListener("click", function () {
+  const items = document.querySelectorAll(".todo-item");
+  items.forEach((it) => it.classList.remove("hidden"));
+  countItems();
+});
+
+clearBtns.forEach((btn) => {
+  btn.addEventListener("click", function () {
+    clearCompleted = true;
+    const activeTodos = globalTodoItems.filter((item) =>
+      item.classList.contains("active-todo")
+    );
+    activeTodos.map((todo) => todo.remove());
+    renderNumOfTodos();
+  });
+});
+
+btnActive.addEventListener("click", function () {
+  const activeTodos = globalTodoItems.filter((item) =>
+    item.classList.contains("active-todo")
+  );
+
+  globalTodoItems.forEach((it) => it.classList.remove("hidden"));
+  activeTodos.forEach((el) => {
+    el.classList.add("hidden");
+  });
+
+  numberOfTodos = globalTodoItems.filter(
+    (item) => !item.classList.contains("active-todo")
+  ).length;
+});
+
+btnCompleted.addEventListener("click", function () {
+  const notActiveTodos = globalTodoItems.filter(
+    (item) => !item.classList.contains("active-todo")
+  );
+
+  const activeTodos = globalTodoItems.filter((item) =>
+    item.classList.contains("active-todo")
+  );
+  activeTodos.forEach((el) => el.classList.remove("hidden"));
+  notActiveTodos.forEach((el) => el.classList.add("hidden"));
+});
+
+document.addEventListener("keydown", function (e) {
+  if (e.key !== "Enter") return;
+  if (inputTodo.value === "") return;
+  createTodo(inputTodo.value);
+  // back to All todo list
+  btnAll.click();
+});
 
 const toggleActiveOnCategoryBtns = function () {
   const categoryBtns = document.querySelectorAll(".category-btn");
@@ -200,5 +191,10 @@ const toggleActiveOnCategoryBtns = function () {
         : e.target.classList.remove("active");
     });
   });
+
+  // Back to all todos after clearing completed
+  clearBtns.forEach((btn) =>
+    btn.addEventListener("click", () => btnAll.click())
+  );
 };
 toggleActiveOnCategoryBtns();
