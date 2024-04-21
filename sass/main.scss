@@ -120,7 +120,7 @@ body.active {
   transition: all 0.4s ease-in-out;
 }
 
-.todo-check.active {
+.todo-item.active .todo-check {
   background-image: linear-gradient(
     to top,
     hsl(192, 100%, 67%),
@@ -128,11 +128,11 @@ body.active {
   );
 }
 
-.todo-check.active svg {
+.todo-item.active .todo-check svg {
   display: flex !important;
 }
 
-.todo-check.active + .todo {
+.todo-item.active .todo-check .todo {
   text-decoration: line-through !important;
   font-weight: 500;
   color: var(--LightGrayishBlue);

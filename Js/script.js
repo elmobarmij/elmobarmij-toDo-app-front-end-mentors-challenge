@@ -3,7 +3,6 @@ const todoCheckIcon = document.querySelector(".todo-check");
 const todosContainer = document.querySelector(".todos-container");
 const itemsCounter = document.querySelectorAll(".items-counter");
 
-let clearCompleted = false;
 let globalTodoItems = [];
 let numberOfTodos = 0;
 
@@ -29,9 +28,10 @@ document.getElementById("btnSwitch").addEventListener("click", () => {
 
 // Helpers
 const renderNumOfTodos = function () {
-  numberOfTodos = globalTodoItems.filter((item) =>
-    item.classList.contains("todo-item")
-  ).length;
+  numberOfTodos =
+    globalTodoItems.length -
+    globalTodoItems.filter((el) => el.classList.contains("hidden")).length;
+
   itemsCounter.forEach((item) => {
     item.textContent = numberOfTodos;
   });
@@ -45,10 +45,12 @@ const countItems = function () {
 
 // Create Todo List
 const createTodo = function (inp) {
+  const todoId = new Date().valueOf();
+
   const html = `
-    <div
+  <div
       class="todo-item position-relative d-flex justify-content-center 
-      align-items-center"
+      align-items-center" id=${todoId}
     >
       <div
         class="form-control border-bottom-0 create-todo 
@@ -82,33 +84,20 @@ const createTodo = function (inp) {
       </div>
       `;
 
-  inputTodo.value = "";
   todosContainer.insertAdjacentHTML("beforeend", html);
 
   const todoItems = Array.from(document.querySelectorAll(".todo-item"));
   const closeIcons = document.querySelectorAll(".todo-close");
-  const checkIcons = document.querySelectorAll(".todo-check");
-  const arrayOfTodos = Array.from(checkIcons);
   const counterElements = document.querySelectorAll(".items-counter");
 
   counterElements.forEach((el) => countItems(el));
 
-  // loop through all todos
-  //1 if todo doesn't have active add it
-  //2 if todo have active remove it
-
-  checkIcons.forEach((todo) => {
-    todo.addEventListener("click", function (e) {
-      arrayOfTodos.forEach((todo) => todo.classList.remove("active"));
-      if (!e.target.classList.contains("active")) {
-        e.target.classList.add("active");
-      } else {
-        e.target.classList.remove("active");
-      }
-    });
+  const el = todoItems.find((el) => +el.id === todoId);
+  el.addEventListener("click", function () {
+    el.classList.toggle("active");
   });
 
-  const closeTodo = function () {
+  const deleteTodoItem = function () {
     closeIcons.forEach((icon) => {
       if (icon === null) return;
 
@@ -121,7 +110,7 @@ const createTodo = function (inp) {
       });
     });
   };
-  closeTodo();
+  deleteTodoItem();
 
   // Set todoItems to globalTodoItems,
   // so we can access todos array from global scope (outside createTodo())
@@ -129,6 +118,17 @@ const createTodo = function (inp) {
 };
 
 // Event listeners
+document.addEventListener("keydown", function (e) {
+  if (e.key !== "Enter") return;
+  if (inputTodo.value === "") return;
+  createTodo(inputTodo.value);
+  renderNumOfTodos();
+  inputTodo.value = "";
+
+  // back to All todo list after creating every new todo
+  btnAll.click();
+});
+
 btnAll.addEventListener("click", function () {
   const items = document.querySelectorAll(".todo-item");
   items.forEach((it) => it.classList.remove("hidden"));
@@ -137,9 +137,8 @@ btnAll.addEventListener("click", function () {
 
 clearBtns.forEach((btn) => {
   btn.addEventListener("click", function () {
-    clearCompleted = true;
     const activeTodos = globalTodoItems.filter((item) =>
-      item.classList.contains("active-todo")
+      item.classList.contains("active")
     );
     activeTodos.map((todo) => todo.remove());
     renderNumOfTodos();
@@ -148,7 +147,7 @@ clearBtns.forEach((btn) => {
 
 btnActive.addEventListener("click", function () {
   const activeTodos = globalTodoItems.filter((item) =>
-    item.classList.contains("active-todo")
+    item.classList.contains("active")
   );
 
   globalTodoItems.forEach((it) => it.classList.remove("hidden"));
@@ -157,31 +156,23 @@ btnActive.addEventListener("click", function () {
   });
 
   numberOfTodos = globalTodoItems.filter(
-    (item) => !item.classList.contains("active-todo")
+    (item) => !item.classList.contains("active")
   ).length;
 });
 
 btnCompleted.addEventListener("click", function () {
   const notActiveTodos = globalTodoItems.filter(
-    (item) => !item.classList.contains("active-todo")
+    (item) => !item.classList.contains("active")
   );
 
   const activeTodos = globalTodoItems.filter((item) =>
-    item.classList.contains("active-todo")
+    item.classList.contains("active")
   );
   activeTodos.forEach((el) => el.classList.remove("hidden"));
   notActiveTodos.forEach((el) => el.classList.add("hidden"));
 });
 
-document.addEventListener("keydown", function (e) {
-  if (e.key !== "Enter") return;
-  if (inputTodo.value === "") return;
-  createTodo(inputTodo.value);
-  // back to All todo list
-  btnAll.click();
-});
-
-const toggleActiveOnCategoryBtns = function () {
+const toggleActiveClassOnCategoryBtns = function () {
   const categoryBtns = document.querySelectorAll(".category-btn");
   categoryBtns.forEach((btn) => {
     btn.addEventListener("click", function (e) {
@@ -197,4 +188,4 @@ const toggleActiveOnCategoryBtns = function () {
     btn.addEventListener("click", () => btnAll.click())
   );
 };
-toggleActiveOnCategoryBtns();
+toggleActiveClassOnCategoryBtns();
