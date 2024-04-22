@@ -132,7 +132,7 @@ body.active {
   display: flex !important;
 }
 
-.todo-item.active .todo-check .todo {
+.todo-item.active .todo-check + .todo {
   text-decoration: line-through !important;
   font-weight: 500;
   color: var(--LightGrayishBlue);
