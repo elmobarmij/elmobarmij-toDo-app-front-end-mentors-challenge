@@ -4,6 +4,7 @@ const todosContainer = document.querySelector(".todos-container");
 const itemsCounter = document.querySelectorAll(".items-counter");
 
 let globalTodoItems = [];
+let data = [];
 let numberOfTodos = 0;
 
 // Button list
@@ -24,7 +25,25 @@ document.getElementById("btnSwitch").addEventListener("click", () => {
     document.querySelector(".mode").setAttribute("src", "img/icon-sun.svg");
     document.body.classList.toggle("active");
   }
+  // Add theme to localStorage
+  localStorage.setItem(
+    "theme",
+    JSON.stringify(document.documentElement.getAttribute("data-bs-theme"))
+  );
 });
+
+// Set theme and body BG according to localStorage after page first reload
+document.documentElement.setAttribute(
+  "data-bs-theme",
+  JSON.parse(localStorage.getItem("theme"))
+);
+
+document.documentElement.getAttribute("data-bs-theme") == "dark" &&
+  document.body.classList.add("active");
+
+document.documentElement.getAttribute("data-bs-theme") == "dark"
+  ? document.querySelector(".mode").setAttribute("src", "img/icon-sun.svg")
+  : document.querySelector(".mode").setAttribute("src", "img/icon-moon.svg");
 
 // Helpers
 const renderNumOfTodos = function () {
@@ -44,13 +63,13 @@ const countItems = function () {
 };
 
 // Create Todo List
-const createTodo = function (inp) {
-  const todoId = new Date().valueOf();
+const createTodo = function (inp, isCompleted) {
+  const todoId = Math.round(Math.random() * 100000000);
 
   const html = `
   <div
       class="todo-item position-relative d-flex justify-content-center 
-      align-items-center" id=${todoId}
+      align-items-center ${isCompleted ? "active" : ""}" id=${todoId}
     >
       <div
         class="form-control border-bottom-0 create-todo 
@@ -95,15 +114,47 @@ const createTodo = function (inp) {
   const el = todoItems.find((el) => +el.id === todoId);
   el.addEventListener("click", function () {
     el.classList.toggle("active");
+
+    const todoItems = JSON.parse(localStorage.getItem("todos")) || [];
+    const targetItemId = +el.id;
+    const targetItem = todoItems.filter((item) => +item.id === targetItemId)[0];
+    if (targetItem) targetItem.completed = el.classList.contains("active");
+    // Adjust localStorage according to completed state (re-render todoItems)
+    localStorage.setItem("todos", JSON.stringify(todoItems));
   });
+
+  let todoObj = {
+    id: todoId,
+    text: inp,
+    completed: el.classList.contains("active"),
+  };
+
+  data.push(todoObj);
+  /*
+   * localStorage.setItem(<itemname>,<itemvalue>) main method
+   * (predefined method of js) for setting item into localstorage
+   */
+  localStorage.setItem("todos", JSON.stringify(data));
 
   const deleteTodoItem = function () {
     closeIcons.forEach((icon) => {
       if (icon === null) return;
-
       icon.addEventListener("click", function () {
+        // remove item from LocalStorage
+        const todoItems = JSON.parse(localStorage.getItem("todos")) || [];
+        const targetItemId = +icon.closest(".todo-item").id;
+        const targetItem = todoItems.filter(
+          (item) => +item.id === targetItemId
+        )[0];
+        const itemIndex = todoItems.findIndex(
+          (item) => item.id === targetItem.id
+        );
+        todoItems.splice(itemIndex, 1);
+        localStorage.setItem("todos", JSON.stringify(todoItems)); // Changed key to "todos"
+
+        // remove item from UI
         icon.closest(".todo-item").remove();
-        numberOfTodos--;
+
         todosContainer.children.length === 0
           ? itemsCounter.forEach((item) => (item.textContent = 0))
           : countItems();
@@ -123,11 +174,18 @@ document.addEventListener("keydown", function (e) {
   if (inputTodo.value === "") return;
   createTodo(inputTodo.value);
   renderNumOfTodos();
+
   inputTodo.value = "";
 
   // back to All todo list after creating every new todo
   btnAll.click();
 });
+
+function renderTodosFromLocaleStorage() {
+  const todoItems = JSON.parse(localStorage.getItem("todos")) || [];
+  todoItems.map((item) => createTodo(item.text, item.completed));
+}
+renderTodosFromLocaleStorage();
 
 btnAll.addEventListener("click", function () {
   const items = document.querySelectorAll(".todo-item");
@@ -141,6 +199,12 @@ clearBtns.forEach((btn) => {
       item.classList.contains("active")
     );
     activeTodos.map((todo) => todo.remove());
+
+    const todoItems = JSON.parse(localStorage.getItem("todos")) || [];
+    let completedItems = todoItems.filter((item) => !item.completed);
+    // Update localStorage with non-completed items
+    localStorage.setItem("todos", JSON.stringify(completedItems));
+
     renderNumOfTodos();
   });
 });
